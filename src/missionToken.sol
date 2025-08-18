@@ -13,7 +13,7 @@ contract MissionToken is ERC20 {
     address public controller; // 이 토큰을 제어하는 MissionProtocol 컨트랙트
     IERC20 public immutable underlyingToken; // 이 토큰이 래핑하는 기본 토큰
     bool public immutable transferable; // 일반 사용자에게 토큰 전송이 허용되는지 여부
-    
+
     // 토큰 결제를 받을 수 있는 승인된 가맹점들을 추적하는 매핑
     mapping(address => bool) public authorizedMerchants;
 
@@ -100,7 +100,7 @@ contract MissionToken is ERC20 {
     function mint(uint256 amount) external onlyController {
         // 기본 토큰을 이 컨트랙트로 전송받음
         require(underlyingToken.transferFrom(msg.sender, address(this), amount), "transfer failed");
-        
+
         // controller에게 동일한 양의 래핑된 토큰을 mint
         _mint(msg.sender, amount);
     }
@@ -121,11 +121,11 @@ contract MissionToken is ERC20 {
      */
     function payToMerchant(address merchant, uint256 amount) external {
         if (!authorizedMerchants[merchant]) revert NotAuthorizedMerchant();
-        
+
         _burn(msg.sender, amount);
         // 기본 토큰을 가맹점에게 전송
         require(underlyingToken.transfer(merchant, amount), "transfer failed");
-        
+
         emit PaymentProcessed(msg.sender, merchant, amount);
     }
 

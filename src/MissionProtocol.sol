@@ -67,7 +67,7 @@ contract MissionProtocol is ReentrancyGuard, Ownable {
     mapping(uint256 => Mission) public missions;
     mapping(uint256 => mapping(address => UserParticipation)) public userParticipations;
     mapping(bytes32 => bool) public processedAttestations; // 중복 처리 방지
-    
+
     // 전역 설정
     uint256 public maxAttestationAge = 7; // 검증서 유효 기간 (일)
     address public defaultVerifier; // 기본 검증자 주소
@@ -93,9 +93,13 @@ contract MissionProtocol is ReentrancyGuard, Ownable {
 
     event MissionStatusChanged(uint256 indexed missionId, MissionStatus oldStatus, MissionStatus newStatus);
 
-    event MissionBudgetAdded(uint256 indexed missionId, address indexed creator, uint256 additionalBudget, uint256 newTotalBudget);
+    event MissionBudgetAdded(
+        uint256 indexed missionId, address indexed creator, uint256 additionalBudget, uint256 newTotalBudget
+    );
 
-    event MissionEndDateUpdated(uint256 indexed missionId, address indexed creator, uint256 oldEndDate, uint256 newEndDate);
+    event MissionEndDateUpdated(
+        uint256 indexed missionId, address indexed creator, uint256 oldEndDate, uint256 newEndDate
+    );
 
     // 에러
     error InvalidMission();
@@ -254,13 +258,15 @@ contract MissionProtocol is ReentrancyGuard, Ownable {
         if (!isAuthorizedVerifier) revert UnauthorizedVerifier();
 
         // 배치 서명 검증
-        bytes32 batchMessageHash = keccak256(abi.encode(
-            batchAttestation.users,
-            batchAttestation.missionId,
-            batchAttestation.date,
-            batchAttestation.dataHashes,
-            batchAttestation.rewards
-        ));
+        bytes32 batchMessageHash = keccak256(
+            abi.encode(
+                batchAttestation.users,
+                batchAttestation.missionId,
+                batchAttestation.date,
+                batchAttestation.dataHashes,
+                batchAttestation.rewards
+            )
+        );
         bytes32 ethSignedMessageHash = MessageHashUtils.toEthSignedMessageHash(batchMessageHash);
         address recoveredSigner = ECDSA.recover(ethSignedMessageHash, batchAttestation.signature);
         if (recoveredSigner != batchAttestation.verifier) revert InvalidSignature();
@@ -287,7 +293,8 @@ contract MissionProtocol is ReentrancyGuard, Ownable {
             if (reward == 0) continue;
 
             // 개별 검증서 해시 생성 및 중복 처리 확인
-            bytes32 attestationHash = keccak256(abi.encode(user, batchAttestation.missionId, batchAttestation.date, dataHash));
+            bytes32 attestationHash =
+                keccak256(abi.encode(user, batchAttestation.missionId, batchAttestation.date, dataHash));
             if (processedAttestations[attestationHash]) continue; // 이미 처리된 것은 스킵
 
             // 이미 해당 날짜에 보상을 받았는지 확인
@@ -344,7 +351,7 @@ contract MissionProtocol is ReentrancyGuard, Ownable {
         Mission storage mission = missions[missionId];
         if (mission.creator == address(0)) revert InvalidMission();
         require(newTotalBudget >= mission.spentBudget, "Budget cannot be less than spent amount");
-        
+
         mission.totalBudget = newTotalBudget;
     }
 
@@ -355,7 +362,7 @@ contract MissionProtocol is ReentrancyGuard, Ownable {
         Mission storage mission = missions[missionId];
         if (mission.creator == address(0)) revert InvalidMission();
         require(newEndDate > mission.startDate, "End date must be after start date");
-        
+
         mission.endDate = newEndDate;
     }
 
@@ -371,7 +378,7 @@ contract MissionProtocol is ReentrancyGuard, Ownable {
         // 추가 예산을 기본 토큰으로 전송받기
         MissionToken rewardToken = MissionToken(mission.rewardToken);
         address underlyingToken = address(rewardToken.underlyingToken());
-        
+
         IERC20(underlyingToken).transferFrom(msg.sender, address(this), additionalBudget);
         IERC20(underlyingToken).approve(address(rewardToken), additionalBudget);
         rewardToken.mint(additionalBudget);
@@ -390,7 +397,7 @@ contract MissionProtocol is ReentrancyGuard, Ownable {
         if (mission.creator == address(0)) revert InvalidMission();
         if (mission.creator != msg.sender) revert NotMissionCreator();
         require(newEndDate > mission.startDate, "End date must be after start date");
-        
+
         uint256 oldEndDate = mission.endDate;
         mission.endDate = newEndDate;
 

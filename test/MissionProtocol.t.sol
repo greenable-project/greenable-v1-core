@@ -62,8 +62,9 @@ contract MissionProtocolTest is Test {
         merchants[0] = merchant1;
         merchants[1] = merchant2;
 
-        // 미션 생성
-        uint256 missionId = protocol.createMission(
+
+        // 미션 제안
+        uint256 proposalId = protocol.createMissionProposal(
             "Health Walk Mission",
             "Daily walking mission for health",
             address(krw),
@@ -74,6 +75,10 @@ contract MissionProtocolTest is Test {
             merchants,
             false // 전송 불가능
         );
+
+    vm.stopPrank();
+    // 오너가 승인 (address(this)에서 호출)
+    uint256 missionId = protocol.approveMission(proposalId);
 
         vm.stopPrank();
 
@@ -403,7 +408,8 @@ contract MissionProtocolTest is Test {
         merchants[0] = merchant1;
         merchants[1] = merchant2;
 
-        uint256 missionId = protocol.createMission(
+        // 미션 제안
+        uint256 proposalId = protocol.createMissionProposal(
             "Test Mission",
             "Test Description",
             address(krw),
@@ -415,8 +421,10 @@ contract MissionProtocolTest is Test {
             false
         );
 
-        vm.stopPrank();
-        return missionId;
+    vm.stopPrank();
+    // 오너가 승인 (address(this)에서 호출)
+    uint256 missionId = protocol.approveMission(proposalId);
+    return missionId;
     }
 
     function _createSignature(

@@ -13,6 +13,21 @@ import {MissionToken} from "./missionToken.sol";
  * @dev 미션 등록, 검증서 제출, 보상 지급을 관리하는 핵심 프로토콜 컨트랙트
  */
 contract MissionProtocol is ReentrancyGuard, Ownable {
+    // 미션 제안 구조체
+    struct MissionProposal {
+        string name;
+        string description;
+        address creator;
+        address underlyingToken;
+        uint256 totalBudget;
+        uint256 startDate;
+        uint256 endDate;
+        address[] authorizedVerifiers;
+        address[] authorizedMerchants;
+        bool transferable;
+        bool approved;
+    }
+
     // 미션 상태
     enum MissionStatus {
         Active, // 활성 상태
@@ -65,6 +80,8 @@ contract MissionProtocol is ReentrancyGuard, Ownable {
     // 상태 변수
     uint256 public nextMissionId = 1;
     mapping(uint256 => Mission) public missions;
+    uint256 public nextProposalId = 1;
+    mapping(uint256 => MissionProposal) public proposedMissions;
     mapping(uint256 => mapping(address => UserParticipation)) public userParticipations;
     mapping(bytes32 => bool) public processedAttestations; // 중복 처리 방지
 
@@ -73,6 +90,14 @@ contract MissionProtocol is ReentrancyGuard, Ownable {
     address public defaultVerifier; // 기본 검증자 주소
 
     // 이벤트
+    event MissionProposed(
+        uint256 indexed proposalId,
+        string name,
+        address indexed creator,
+        address indexed underlyingToken,
+        uint256 totalBudget
+    );
+
     event MissionCreated(
         uint256 indexed missionId,
         string name,
@@ -119,9 +144,9 @@ contract MissionProtocol is ReentrancyGuard, Ownable {
     }
 
     /**
-     * @dev 새로운 미션을 생성합니다
+     * @dev 새로운 미션을 제안합니다 (오너 승인 필요)
      */
-    function createMission(
+    function createMissionProposal(
         string memory _name,
         string memory _description,
         address _underlyingToken,
@@ -131,39 +156,65 @@ contract MissionProtocol is ReentrancyGuard, Ownable {
         address[] memory _authorizedVerifiers,
         address[] memory _authorizedMerchants,
         bool _transferable
-    ) external nonReentrant returns (uint256 missionId) {
+    ) external returns (uint256 proposalId) {
         require(_totalBudget > 0, "Invalid budget");
         require(_startDate < _endDate, "Invalid dates");
         require(_authorizedVerifiers.length > 0, "No verifiers");
 
+        proposalId = nextProposalId++;
+        MissionProposal storage proposal = proposedMissions[proposalId];
+        proposal.name = _name;
+        proposal.description = _description;
+        proposal.creator = msg.sender;
+        proposal.underlyingToken = _underlyingToken;
+        proposal.totalBudget = _totalBudget;
+        proposal.startDate = _startDate;
+        proposal.endDate = _endDate;
+        proposal.authorizedVerifiers = _authorizedVerifiers;
+        proposal.authorizedMerchants = _authorizedMerchants;
+        proposal.transferable = _transferable;
+        proposal.approved = false;
+
+        emit MissionProposed(proposalId, _name, msg.sender, _underlyingToken, _totalBudget);
+    }
+
+    /**
+     * @dev 오너가 미션 제안을 승인하여 실제 미션을 생성합니다
+     */
+    function approveMission(uint256 proposalId) external onlyOwner nonReentrant returns (uint256 missionId) {
+        MissionProposal storage proposal = proposedMissions[proposalId];
+        require(!proposal.approved, "Already approved");
+        require(proposal.totalBudget > 0, "Invalid proposal");
+
         missionId = nextMissionId++;
 
         // MissionToken 배포
-        string memory tokenName = string(abi.encodePacked("Mission-", _name));
-        string memory tokenSymbol = string(abi.encodePacked("M", _name));
+        string memory tokenName = string(abi.encodePacked("Mission-", proposal.name));
+        string memory tokenSymbol = string(abi.encodePacked("M", proposal.name));
 
         MissionToken rewardToken =
-            new MissionToken(tokenName, tokenSymbol, _underlyingToken, _transferable, _authorizedMerchants);
+            new MissionToken(tokenName, tokenSymbol, proposal.underlyingToken, proposal.transferable, proposal.authorizedMerchants);
 
         // 미션 정보 저장
         Mission storage mission = missions[missionId];
-        mission.name = _name;
-        mission.description = _description;
-        mission.creator = msg.sender;
+        mission.name = proposal.name;
+        mission.description = proposal.description;
+        mission.creator = proposal.creator;
         mission.rewardToken = address(rewardToken);
-        mission.totalBudget = _totalBudget;
+        mission.totalBudget = proposal.totalBudget;
         mission.spentBudget = 0;
-        mission.startDate = _startDate;
-        mission.endDate = _endDate;
+        mission.startDate = proposal.startDate;
+        mission.endDate = proposal.endDate;
         mission.status = MissionStatus.Active;
-        mission.authorizedVerifiers = _authorizedVerifiers;
+        mission.authorizedVerifiers = proposal.authorizedVerifiers;
 
         // 예산을 기본 토큰으로 예치하고 MissionToken mint
-        IERC20(_underlyingToken).transferFrom(msg.sender, address(this), _totalBudget);
-        IERC20(_underlyingToken).approve(address(rewardToken), _totalBudget);
-        rewardToken.mint(_totalBudget);
+        IERC20(proposal.underlyingToken).transferFrom(proposal.creator, address(this), proposal.totalBudget);
+        IERC20(proposal.underlyingToken).approve(address(rewardToken), proposal.totalBudget);
+        rewardToken.mint(proposal.totalBudget);
 
-        emit MissionCreated(missionId, _name, msg.sender, address(rewardToken), _totalBudget);
+        proposal.approved = true;
+        emit MissionCreated(missionId, proposal.name, proposal.creator, address(rewardToken), proposal.totalBudget);
     }
 
     /**

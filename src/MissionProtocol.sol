@@ -66,7 +66,6 @@ contract MissionProtocol is ReentrancyGuard, Ownable {
 
     // 사용자 참여 정보
     struct UserParticipation {
-        uint256 lastRewardDate; // 마지막 보상 받은 날
         uint256 totalRewardsEarned; // 총 받은 보상
     }
 
@@ -305,9 +304,8 @@ contract MissionProtocol is ReentrancyGuard, Ownable {
         require(date <= currentDate, "Future date not allowed");
         require(currentDate - date <= maxAttestationAge, "Too old attestation");
 
-        // 이미 해당 날짜에 보상을 받았는지 확인
+        // 사용자 참여 정보
         UserParticipation storage participation = userParticipations[missionId][user];
-        require(participation.lastRewardDate < date, "Already rewarded for this date");
 
         // 예산 확인
         if (mission.spentBudget + reward > mission.totalBudget) revert InsufficientBudget();
@@ -320,7 +318,6 @@ contract MissionProtocol is ReentrancyGuard, Ownable {
 
         // 보상 지급
         mission.spentBudget += reward;
-        participation.lastRewardDate = date;
         participation.totalRewardsEarned += reward;
 
         // 미션 수행 횟수 증가 및 이벤트
@@ -397,16 +394,14 @@ contract MissionProtocol is ReentrancyGuard, Ownable {
                 keccak256(abi.encode(user, batchAttestation.missionId, batchAttestation.date, dataHash));
             if (processedAttestations[attestationHash]) continue; // 이미 처리된 것은 스킵
 
-            // 이미 해당 날짜에 보상을 받았는지 확인
+            // 사용자 참여 정보
             UserParticipation storage participation = userParticipations[batchAttestation.missionId][user];
-            if (participation.lastRewardDate >= batchAttestation.date) continue; // 이미 보상받은 것은 스킵
 
             // 검증서 처리 완료 표시
             processedAttestations[attestationHash] = true;
 
             // 보상 지급
             mission.spentBudget += reward;
-            participation.lastRewardDate = batchAttestation.date;
             participation.totalRewardsEarned += reward;
 
             // 미션 수행 횟수 증가 및 이벤트

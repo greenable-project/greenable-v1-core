@@ -121,7 +121,6 @@ contract MissionProtocolTest is Test {
 
         // 사용자 참여 정보 확인
         MissionProtocol.UserParticipation memory participation = protocol.getUserParticipation(missionId, user1);
-        assertEq(participation.lastRewardDate, currentDate);
 
         assertEq(participation.totalRewardsEarned, reward);
 
@@ -133,14 +132,13 @@ contract MissionProtocolTest is Test {
         uint256 completionCount = protocol.userMissionCompletions(missionId, user1);
         assertEq(completionCount, 1);
 
-        // 같은 미션을 같은 날짜에 한 번 더 수행하면 실패해야 함 (중복 방지)
+        // 같은 미션을 같은 날짜에 여러 번 수행해도 모두 인정됨
         bytes32 nextDataHash = keccak256("user1_walk_data_tomorrow");
         bytes memory nextSignature =
             _createSignature(user1, missionId, currentDate, nextDataHash, reward, verifier1PrivateKey);
-        vm.expectRevert("Already rewarded for this date");
         protocol.submitAttestation(user1, missionId, currentDate, nextDataHash, reward, verifier1, nextSignature);
-        // 횟수는 여전히 1회여야 함
-        assertEq(protocol.userMissionCompletions(missionId, user1), 1);
+        // 횟수는 2회로 증가
+        assertEq(protocol.userMissionCompletions(missionId, user1), 2);
     }
 
     function testMerchantPayment() public {
@@ -251,7 +249,6 @@ contract MissionProtocolTest is Test {
         // 각 사용자의 참여 정보 확인
         for (uint256 i = 0; i < users.length; i++) {
             MissionProtocol.UserParticipation memory participation = protocol.getUserParticipation(missionId, users[i]);
-            assertEq(participation.lastRewardDate, currentDate);
 
             assertEq(participation.totalRewardsEarned, rewards[i]);
 

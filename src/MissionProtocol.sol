@@ -7,12 +7,15 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import {MissionToken} from "./missionToken.sol";
+import {AchievementNFT} from "./AchievementNFT.sol";
 
 /**
  * @title MissionProtocol
  * @dev 미션 등록, 검증서 제출, 보상 지급을 관리하는 핵심 프로토콜 컨트랙트
  */
 contract MissionProtocol is ReentrancyGuard, Ownable {
+    // 업적 NFT 주소 (생성자에서 배포)
+    address public achievementNFT;
     // 미션 제안 구조체
     struct MissionProposal {
         string name;
@@ -90,6 +93,29 @@ contract MissionProtocol is ReentrancyGuard, Ownable {
     address public defaultVerifier; // 기본 검증자 주소
 
     // 이벤트
+    event AchievementNFTSet(address indexed nft);
+    event AchievementNFTMinted(address indexed to, uint256 indexed tokenId, uint256 missionId, string metadataURI);
+    /**
+     * @dev 업적 NFT 컨트랙트 주소 설정 (owner only)
+     */
+    function setAchievementNFT(address _nft) external onlyOwner {
+        achievementNFT = _nft;
+        emit AchievementNFTSet(_nft);
+    }
+
+    /**
+     * @dev owner가 유저에게 업적 NFT 발행 (missionId는 0 가능)
+     */
+    function mintAchievementNFT(address to, uint256 missionId, string memory metadataURI) external onlyOwner returns (uint256 tokenId) {
+        require(achievementNFT != address(0), "NFT not set");
+        // call AchievementNFT.mint
+        (bool success, bytes memory data) = achievementNFT.call(
+            abi.encodeWithSignature("mint(address,uint256,string)", to, missionId, metadataURI)
+        );
+        require(success, "NFT mint failed");
+        tokenId = abi.decode(data, (uint256));
+        emit AchievementNFTMinted(to, tokenId, missionId, metadataURI);
+    }
     event MissionProposed(
         uint256 indexed proposalId,
         string name,
@@ -141,6 +167,10 @@ contract MissionProtocol is ReentrancyGuard, Ownable {
     // 생성자
     constructor(address _defaultVerifier) Ownable(msg.sender) {
         defaultVerifier = _defaultVerifier;
+        // 업적 NFT 컨트랙트 배포 및 주소 저장
+        AchievementNFT nft = new AchievementNFT("AchievementNFT", "ACHV");
+        achievementNFT = address(nft);
+        emit AchievementNFTSet(achievementNFT);
     }
 
     /**

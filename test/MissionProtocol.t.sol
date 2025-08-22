@@ -62,7 +62,6 @@ contract MissionProtocolTest is Test {
         merchants[0] = merchant1;
         merchants[1] = merchant2;
 
-
         // 미션 제안
         uint256 proposalId = protocol.createMissionProposal(
             "Health Walk Mission",
@@ -76,9 +75,9 @@ contract MissionProtocolTest is Test {
             false // 전송 불가능
         );
 
-    vm.stopPrank();
-    // 오너가 승인 (address(this)에서 호출)
-    uint256 missionId = protocol.approveMission(proposalId);
+        vm.stopPrank();
+        // 오너가 승인 (address(this)에서 호출)
+        uint256 missionId = protocol.approveMission(proposalId);
 
         vm.stopPrank();
 
@@ -130,17 +129,18 @@ contract MissionProtocolTest is Test {
         MissionToken rewardToken = MissionToken(mission.rewardToken);
         assertEq(rewardToken.balanceOf(user1), reward);
 
-    // 미션 수행 횟수 확인 (1회)
-    uint256 completionCount = protocol.userMissionCompletions(missionId, user1);
-    assertEq(completionCount, 1);
+        // 미션 수행 횟수 확인 (1회)
+        uint256 completionCount = protocol.userMissionCompletions(missionId, user1);
+        assertEq(completionCount, 1);
 
-    // 같은 미션을 같은 날짜에 한 번 더 수행하면 실패해야 함 (중복 방지)
-    bytes32 nextDataHash = keccak256("user1_walk_data_tomorrow");
-    bytes memory nextSignature = _createSignature(user1, missionId, currentDate, nextDataHash, reward, verifier1PrivateKey);
-    vm.expectRevert("Already rewarded for this date");
-    protocol.submitAttestation(user1, missionId, currentDate, nextDataHash, reward, verifier1, nextSignature);
-    // 횟수는 여전히 1회여야 함
-    assertEq(protocol.userMissionCompletions(missionId, user1), 1);
+        // 같은 미션을 같은 날짜에 한 번 더 수행하면 실패해야 함 (중복 방지)
+        bytes32 nextDataHash = keccak256("user1_walk_data_tomorrow");
+        bytes memory nextSignature =
+            _createSignature(user1, missionId, currentDate, nextDataHash, reward, verifier1PrivateKey);
+        vm.expectRevert("Already rewarded for this date");
+        protocol.submitAttestation(user1, missionId, currentDate, nextDataHash, reward, verifier1, nextSignature);
+        // 횟수는 여전히 1회여야 함
+        assertEq(protocol.userMissionCompletions(missionId, user1), 1);
     }
 
     function testMerchantPayment() public {
@@ -436,10 +436,10 @@ contract MissionProtocolTest is Test {
             false
         );
 
-    vm.stopPrank();
-    // 오너가 승인 (address(this)에서 호출)
-    uint256 missionId = protocol.approveMission(proposalId);
-    return missionId;
+        vm.stopPrank();
+        // 오너가 승인 (address(this)에서 호출)
+        uint256 missionId = protocol.approveMission(proposalId);
+        return missionId;
     }
 
     function _createSignature(

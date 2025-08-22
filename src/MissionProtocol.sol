@@ -23,10 +23,11 @@ contract MissionProtocol is ReentrancyGuard, Ownable {
 
     // 미션 수행 기록 이벤트
     event MissionCompleted(address indexed user, uint256 indexed missionId, uint256 newCount, uint256 date);
-    
+
     // 업적 NFT 주소 (생성자에서 배포)
     address public achievementNFT;
     // 미션 제안 구조체
+
     struct MissionProposal {
         string name;
         string description;
@@ -65,8 +66,8 @@ contract MissionProtocol is ReentrancyGuard, Ownable {
 
     // 사용자 참여 정보
     struct UserParticipation {
-    uint256 lastRewardDate; // 마지막 보상 받은 날
-    uint256 totalRewardsEarned; // 총 받은 보상
+        uint256 lastRewardDate; // 마지막 보상 받은 날
+        uint256 totalRewardsEarned; // 총 받은 보상
     }
 
     // 검증서 구조체
@@ -107,6 +108,7 @@ contract MissionProtocol is ReentrancyGuard, Ownable {
     /**
      * @dev 업적 NFT 컨트랙트 주소 설정 (owner only)
      */
+
     function setAchievementNFT(address _nft) external onlyOwner {
         achievementNFT = _nft;
         emit AchievementNFTSet(_nft);
@@ -115,16 +117,20 @@ contract MissionProtocol is ReentrancyGuard, Ownable {
     /**
      * @dev owner가 유저에게 업적 NFT 발행 (missionId는 0 가능)
      */
-    function mintAchievementNFT(address to, uint256 missionId, string memory metadataURI) external onlyOwner returns (uint256 tokenId) {
+    function mintAchievementNFT(address to, uint256 missionId, string memory metadataURI)
+        external
+        onlyOwner
+        returns (uint256 tokenId)
+    {
         require(achievementNFT != address(0), "NFT not set");
         // call AchievementNFT.mint
-        (bool success, bytes memory data) = achievementNFT.call(
-            abi.encodeWithSignature("mint(address,uint256,string)", to, missionId, metadataURI)
-        );
+        (bool success, bytes memory data) =
+            achievementNFT.call(abi.encodeWithSignature("mint(address,uint256,string)", to, missionId, metadataURI));
         require(success, "NFT mint failed");
         tokenId = abi.decode(data, (uint256));
         emit AchievementNFTMinted(to, tokenId, missionId, metadataURI);
     }
+
     event MissionProposed(
         uint256 indexed proposalId,
         string name,
@@ -231,8 +237,9 @@ contract MissionProtocol is ReentrancyGuard, Ownable {
         string memory tokenName = string(abi.encodePacked("Mission-", proposal.name));
         string memory tokenSymbol = string(abi.encodePacked("M", proposal.name));
 
-        MissionToken rewardToken =
-            new MissionToken(tokenName, tokenSymbol, proposal.underlyingToken, proposal.transferable, proposal.authorizedMerchants);
+        MissionToken rewardToken = new MissionToken(
+            tokenName, tokenSymbol, proposal.underlyingToken, proposal.transferable, proposal.authorizedMerchants
+        );
 
         // 미션 정보 저장
         Mission storage mission = missions[missionId];
@@ -317,8 +324,8 @@ contract MissionProtocol is ReentrancyGuard, Ownable {
         participation.totalRewardsEarned += reward;
 
         // 미션 수행 횟수 증가 및 이벤트
-    _userMissionCompletions[missionId][user] += 1;
-    emit MissionCompleted(user, missionId, _userMissionCompletions[missionId][user], date);
+        _userMissionCompletions[missionId][user] += 1;
+        emit MissionCompleted(user, missionId, _userMissionCompletions[missionId][user], date);
 
         // MissionToken 전송
         MissionToken(mission.rewardToken).transfer(user, reward);
@@ -404,7 +411,12 @@ contract MissionProtocol is ReentrancyGuard, Ownable {
 
             // 미션 수행 횟수 증가 및 이벤트
             _userMissionCompletions[batchAttestation.missionId][user] += 1;
-            emit MissionCompleted(user, batchAttestation.missionId, _userMissionCompletions[batchAttestation.missionId][user], batchAttestation.date);
+            emit MissionCompleted(
+                user,
+                batchAttestation.missionId,
+                _userMissionCompletions[batchAttestation.missionId][user],
+                batchAttestation.date
+            );
 
             // MissionToken 전송
             MissionToken(mission.rewardToken).transfer(user, reward);

@@ -23,26 +23,26 @@ contract AchievementNFTTest is Test {
         string memory uri = "ipfs://test1";
         uint256 missionId = 42;
         uint256 tokenId = protocol.mintAchievementNFT(user1, missionId, uri);
-    assertEq(nft.ownerOf(tokenId), user1);
-    (uint256 gotMissionId, string memory gotUri) = nft.getAchievementInfo(tokenId);
-    assertEq(gotMissionId, missionId);
-    assertEq(gotUri, uri);
-    assertEq(nft.tokenURI(tokenId), uri);
+        assertEq(nft.ownerOf(tokenId), user1);
+        (uint256 gotMissionId, string memory gotUri) = nft.getAchievementInfo(tokenId);
+        assertEq(gotMissionId, missionId);
+        assertEq(gotUri, uri);
+        assertEq(nft.tokenURI(tokenId), uri);
     }
 
     function testMintAchievementNFTWithoutMissionId() public {
         string memory uri = "ipfs://test2";
         uint256 tokenId = protocol.mintAchievementNFT(user2, 0, uri);
-    assertEq(nft.ownerOf(tokenId), user2);
-    (uint256 gotMissionId, string memory gotUri) = nft.getAchievementInfo(tokenId);
-    assertEq(gotMissionId, 0);
-    assertEq(gotUri, uri);
-    assertEq(nft.tokenURI(tokenId), uri);
+        assertEq(nft.ownerOf(tokenId), user2);
+        (uint256 gotMissionId, string memory gotUri) = nft.getAchievementInfo(tokenId);
+        assertEq(gotMissionId, 0);
+        assertEq(gotUri, uri);
+        assertEq(nft.tokenURI(tokenId), uri);
     }
 
     function testOnlyOwnerCanMint() public {
-    vm.prank(user1);
-    vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, user1));
-    protocol.mintAchievementNFT(user1, 1, "ipfs://fail");
+        vm.prank(user1);
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, user1));
+        protocol.mintAchievementNFT(user1, 1, "ipfs://fail");
     }
 }

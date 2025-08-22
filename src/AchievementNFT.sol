@@ -9,13 +9,13 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
  * @dev 업적 NFT(ERC721), owner만 mint 가능, missionId는 optional
  */
 contract AchievementNFT is ERC721, Ownable {
-
     /// @dev tuple 접근 불가하므로 별도 getter 제공
     function getAchievementInfo(uint256 tokenId) external view returns (uint256 missionId, string memory metadataURI) {
         AchievementInfo memory info = achievementInfos[tokenId];
         missionId = info.missionId;
         metadataURI = info.metadataURI;
     }
+
     uint256 public nextTokenId = 1;
 
     struct AchievementInfo {
@@ -35,7 +35,11 @@ contract AchievementNFT is ERC721, Ownable {
      * @param missionId 연결할 미션 번호(없으면 0)
      * @param metadataURI 업적 메타데이터(이미지/설명 등)
      */
-    function mint(address to, uint256 missionId, string memory metadataURI) external onlyOwner returns (uint256 tokenId) {
+    function mint(address to, uint256 missionId, string memory metadataURI)
+        external
+        onlyOwner
+        returns (uint256 tokenId)
+    {
         tokenId = nextTokenId++;
         _mint(to, tokenId);
         achievementInfos[tokenId] = AchievementInfo({missionId: missionId, metadataURI: metadataURI});

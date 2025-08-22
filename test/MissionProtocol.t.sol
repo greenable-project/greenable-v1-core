@@ -129,6 +129,18 @@ contract MissionProtocolTest is Test {
         // 사용자가 토큰을 받았는지 확인
         MissionToken rewardToken = MissionToken(mission.rewardToken);
         assertEq(rewardToken.balanceOf(user1), reward);
+
+    // 미션 수행 횟수 확인 (1회)
+    uint256 completionCount = protocol.userMissionCompletions(missionId, user1);
+    assertEq(completionCount, 1);
+
+    // 같은 미션을 같은 날짜에 한 번 더 수행하면 실패해야 함 (중복 방지)
+    bytes32 nextDataHash = keccak256("user1_walk_data_tomorrow");
+    bytes memory nextSignature = _createSignature(user1, missionId, currentDate, nextDataHash, reward, verifier1PrivateKey);
+    vm.expectRevert("Already rewarded for this date");
+    protocol.submitAttestation(user1, missionId, currentDate, nextDataHash, reward, verifier1, nextSignature);
+    // 횟수는 여전히 1회여야 함
+    assertEq(protocol.userMissionCompletions(missionId, user1), 1);
     }
 
     function testMerchantPayment() public {
@@ -246,6 +258,9 @@ contract MissionProtocolTest is Test {
             // 사용자가 각자 다른 보상을 받았는지 확인
             MissionToken rewardToken = MissionToken(mission.rewardToken);
             assertEq(rewardToken.balanceOf(users[i]), rewards[i]);
+
+            // 미션 수행 횟수도 1회로 기록되어야 함
+            assertEq(protocol.userMissionCompletions(missionId, users[i]), 1);
         }
     }
 

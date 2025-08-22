@@ -14,6 +14,16 @@ import {AchievementNFT} from "./AchievementNFT.sol";
  * @dev 미션 등록, 검증서 제출, 보상 지급을 관리하는 핵심 프로토콜 컨트랙트
  */
 contract MissionProtocol is ReentrancyGuard, Ownable {
+    // (user, missionId)별 미션 수행 횟수 기록
+    mapping(uint256 => mapping(address => uint256)) private _userMissionCompletions;
+
+    function userMissionCompletions(uint256 missionId, address user) external view returns (uint256) {
+        return _userMissionCompletions[missionId][user];
+    }
+
+    // 미션 수행 기록 이벤트
+    event MissionCompleted(address indexed user, uint256 indexed missionId, uint256 newCount, uint256 date);
+    
     // 업적 NFT 주소 (생성자에서 배포)
     address public achievementNFT;
     // 미션 제안 구조체
@@ -306,6 +316,10 @@ contract MissionProtocol is ReentrancyGuard, Ownable {
         participation.lastRewardDate = date;
         participation.totalRewardsEarned += reward;
 
+        // 미션 수행 횟수 증가 및 이벤트
+    _userMissionCompletions[missionId][user] += 1;
+    emit MissionCompleted(user, missionId, _userMissionCompletions[missionId][user], date);
+
         // MissionToken 전송
         MissionToken(mission.rewardToken).transfer(user, reward);
 
@@ -387,6 +401,10 @@ contract MissionProtocol is ReentrancyGuard, Ownable {
             mission.spentBudget += reward;
             participation.lastRewardDate = batchAttestation.date;
             participation.totalRewardsEarned += reward;
+
+            // 미션 수행 횟수 증가 및 이벤트
+            _userMissionCompletions[batchAttestation.missionId][user] += 1;
+            emit MissionCompleted(user, batchAttestation.missionId, _userMissionCompletions[batchAttestation.missionId][user], batchAttestation.date);
 
             // MissionToken 전송
             MissionToken(mission.rewardToken).transfer(user, reward);

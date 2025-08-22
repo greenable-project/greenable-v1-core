@@ -1,66 +1,41 @@
-## Foundry
+# WE-v1 Mission Protocol
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+## Protocol Overview
 
-Foundry consists of:
+WE-v1 Mission Protocol은 미션 제안, 승인, 인증(Attestation), 보상 지급, 업적 NFT 발행을 지원하는 온체인 미션 플랫폼입니다.
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+- **미션 제안/승인**: 사용자가 미션을 제안하면, 오너가 승인하여 실제 미션이 생성됩니다.
+- **인증/보상**: 사용자는 검증기관의 서명을 받아 미션 수행을 인증하고, 보상을 청구할 수 있습니다. 하루에 여러 번 인증이 가능합니다.
+- **NFT 발행**: 오너는 미션을 완료한 사용자에게 업적 NFT를 발행할 수 있습니다.
 
-## Documentation
+### 주요 흐름 (Mermaid 시퀀스 다이어그램)
 
-https://book.getfoundry.sh/
+```mermaid
+sequenceDiagram
+    participant User
+    participant Owner
+    participant MissionProtocol
+    participant Verifier
+    participant MissionToken
+    participant AchievementNFT
 
-## Usage
+    User->>MissionProtocol: createMissionProposal()
+    MissionProtocol-->>User: emit MissionProposed
 
-### Build
+    Owner->>MissionProtocol: approveMission(proposalId)
+    MissionProtocol->>MissionToken: new MissionToken()
+    MissionProtocol-->>Owner: emit MissionCreated
 
-```shell
-$ forge build
+    User->>Verifier: 요청(오프체인)
+    Verifier->>User: 서명된 attestation(오프체인)
+    User->>MissionProtocol: submitAttestation(..., signature)
+    MissionProtocol->>Verifier: ECDSA 검증
+    MissionProtocol->>MissionToken: transfer(user, reward)
+    MissionProtocol-->>User: emit AttestationSubmitted, RewardPaid, MissionCompleted
+
+    Owner->>MissionProtocol: mintAchievementNFT(user, missionId, uri)
+    MissionProtocol->>AchievementNFT: mint(user, missionId, uri)
+    MissionProtocol-->>Owner: emit AchievementNFTMinted
 ```
 
-### Test
-
-```shell
-$ forge test
-```
-
-### Format
-
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+---

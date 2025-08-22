@@ -123,7 +123,7 @@ contract MissionProtocolTest is Test {
         // 사용자 참여 정보 확인
         MissionProtocol.UserParticipation memory participation = protocol.getUserParticipation(missionId, user1);
         assertEq(participation.lastRewardDate, currentDate);
-        assertEq(participation.totalDaysParticipated, 1);
+
         assertEq(participation.totalRewardsEarned, reward);
 
         // 사용자가 토큰을 받았는지 확인
@@ -240,7 +240,7 @@ contract MissionProtocolTest is Test {
         for (uint256 i = 0; i < users.length; i++) {
             MissionProtocol.UserParticipation memory participation = protocol.getUserParticipation(missionId, users[i]);
             assertEq(participation.lastRewardDate, currentDate);
-            assertEq(participation.totalDaysParticipated, 1);
+
             assertEq(participation.totalRewardsEarned, rewards[i]);
 
             // 사용자가 각자 다른 보상을 받았는지 확인

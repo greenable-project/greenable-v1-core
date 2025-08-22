@@ -55,9 +55,8 @@ contract MissionProtocol is ReentrancyGuard, Ownable {
 
     // 사용자 참여 정보
     struct UserParticipation {
-        uint256 lastRewardDate; // 마지막 보상 받은 날
-        uint256 totalDaysParticipated; // 총 참여 일수
-        uint256 totalRewardsEarned; // 총 받은 보상
+    uint256 lastRewardDate; // 마지막 보상 받은 날
+    uint256 totalRewardsEarned; // 총 받은 보상
     }
 
     // 검증서 구조체
@@ -305,7 +304,6 @@ contract MissionProtocol is ReentrancyGuard, Ownable {
         // 보상 지급
         mission.spentBudget += reward;
         participation.lastRewardDate = date;
-        participation.totalDaysParticipated++;
         participation.totalRewardsEarned += reward;
 
         // MissionToken 전송
@@ -388,7 +386,6 @@ contract MissionProtocol is ReentrancyGuard, Ownable {
             // 보상 지급
             mission.spentBudget += reward;
             participation.lastRewardDate = batchAttestation.date;
-            participation.totalDaysParticipated++;
             participation.totalRewardsEarned += reward;
 
             // MissionToken 전송

@@ -63,10 +63,18 @@ sequenceDiagram
 
 ## Repository Structure
 ```
-contracts/    # 스마트 컨트랙트 소스 코드
-script/       # 배포 스크립트
-test/         # Foundry 기반 테스트 코드
-docs/         # Lite Paper, 다이어그램, 빌드 가이드
+src/        # 스마트 컨트랙트 소스 코드 (Solidity contracts)
+    ├─ AchievementNFT.sol
+    ├─ MissionProtocol.sol
+    └─ missionToken.sol
+lib/        # 외부 라이브러리 (External libraries)
+    ├─ forge-std/
+    └─ openzeppelin-contracts/
+test/       # Foundry 기반 테스트 코드 (Test codes)
+    ├─ AchievementNFT.t.sol
+    └─ MissionProtocol.t.sol
+script/     # 배포 및 유틸리티 스크립트 (Deployment & utility scripts) [추가 예정]
+docs/       # Lite Paper, 다이어그램, 빌드 가이드 (Docs, diagrams, guides) [추가 예정]
 ```
 
 ---

@@ -1,41 +1,88 @@
-# WE-v1 Mission Protocol
+# greenable-v1-core
+
+> **Greenable Lite Paper 기반 서비스의 핵심 스마트 컨트랙트 레포지토리**  
+> 본 레포는 Greenable 플랫폼에서 사용되는 미션 등록, 인증, 보상 지급, 자동 정산 등의 온체인 로직을 구현한 `core` 모듈입니다.  
+
+---
 
 ## Protocol Overview
 
-WE-v1 Mission Protocol은 미션 제안, 승인, 인증(Attestation), 보상 지급, 업적 NFT 발행을 지원하는 온체인 미션 플랫폼입니다.
+**Greenable Mission Protocol**은  
+기업/지자체가 설계한 친환경 미션을 온체인에서 관리하며, 한국 원화(KRW) 연동 스테이블코인 기반 리워드와 ESG 성과 검증을 지원하는 플랫폼입니다.  
 
-- **미션 제안/승인**: 사용자가 미션을 제안하면, 오너가 승인하여 실제 미션이 생성됩니다.
-- **인증/보상**: 사용자는 검증기관의 서명을 받아 미션 수행을 인증하고, 보상을 청구할 수 있습니다. 하루에 여러 번 인증이 가능합니다.
-- **NFT 발행**: 오너는 미션을 완료한 사용자에게 업적 NFT를 발행할 수 있습니다.
+- **미션 등록/운영**: 기업/지자체는 텀블러 사용, 음식물 쓰레기 감축 등 ESG 미션을 등록하고 자금을 예치합니다.  
+- **인증/보상 지급**: 참여자의 행동은 교통/결제/IoT 데이터와 AI 분석으로 자동 검증되며, 즉시 KRW 스테이블코인 리워드가 지급됩니다.  
+- **자동 정산**: 제휴처는 사용자 결제 시점에 스마트 컨트랙트를 통해 원화 정산을 즉시 수령합니다.  
+- **ESG 성과 데이터화**: 참여율, CO₂ 감축량, 리워드 내역이 자동 집계되어 기업·지자체용 ESG 리포트로 생성됩니다.  
 
-### 주요 흐름 (Mermaid 시퀀스 다이어그램)
+---
+
+## Lite Paper
+플랫폼의 문제 인식, 해결 방안, 서비스 구조 및 기대 효과는 라이트 페이퍼에서 확인할 수 있습니다.  
+
+👉 [Lite Paper]()  
+
+---
+
+## Demo
+데모 영상을 통해 실제 동작 시나리오를 확인할 수 있습니다.  
+
+👉 [Demo Link]()  
+
+---
+
+## 주요 흐름 (Mermaid 시퀀스 다이어그램)
 
 ```mermaid
 sequenceDiagram
     participant User
-    participant Owner
+    participant Company/Gov
     participant MissionProtocol
     participant Verifier
-    participant MissionToken
-    participant AchievementNFT
+    participant Stablecoin
+    participant PartnerStore
 
-    User->>MissionProtocol: createMissionProposal()
-    MissionProtocol-->>User: emit MissionProposed
+    Company/Gov->>MissionProtocol: registerMission(mission, depositFund)
+    MissionProtocol-->>Company/Gov: emit MissionRegistered
 
-    Owner->>MissionProtocol: approveMission(proposalId)
-    MissionProtocol->>MissionToken: new MissionToken()
-    MissionProtocol-->>Owner: emit MissionCreated
+    User->>Verifier: 친환경 활동 데이터 제공 (교통, 결제 등 오프체인)
+    Verifier->>User: 서명된 attestation 반환
+    User->>MissionProtocol: submitAttestation(missionId, signature)
 
-    User->>Verifier: 요청(오프체인)
-    Verifier->>User: 서명된 attestation(오프체인)
-    User->>MissionProtocol: submitAttestation(..., signature)
     MissionProtocol->>Verifier: ECDSA 검증
-    MissionProtocol->>MissionToken: transfer(user, reward)
-    MissionProtocol-->>User: emit AttestationSubmitted, RewardPaid, MissionCompleted
+    MissionProtocol->>Stablecoin: transfer(user, rewardToken)
+    MissionProtocol-->>User: emit RewardPaid
 
-    Owner->>MissionProtocol: mintAchievementNFT(user, missionId, uri)
-    MissionProtocol->>AchievementNFT: mint(user, missionId, uri)
-    MissionProtocol-->>Owner: emit AchievementNFTMinted
+    User->>PartnerStore: 미션 토큰 결제
+    PartnerStore->>MissionProtocol: requestSettlement()
+    MissionProtocol->>Stablecoin: transfer(store, KRW stablecoin)
+    MissionProtocol-->>PartnerStore: emit SettlementCompleted
 ```
 
----
+## Repository Structure
+```
+contracts/    # 스마트 컨트랙트 소스 코드
+script/       # 배포 스크립트
+test/         # Foundry 기반 테스트 코드
+docs/         # Lite Paper, 다이어그램, 빌드 가이드
+```
+
+## Build & Test (Foundry)
+
+이 프로젝트는 Foundry를 기반으로 합니다.
+
+1. Install Foundry
+```
+curl -L https://foundry.paradigm.xyz | bash
+foundryup
+```
+
+2. Build
+```
+forge build
+```
+
+3. Test
+```
+forge test
+```

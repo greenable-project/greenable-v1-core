@@ -31,7 +31,7 @@
 
 ---
 
-## 주요 흐름 (Mermaid 시퀀스 다이어그램)
+## 주요 흐름
 
 ```mermaid
 sequenceDiagram

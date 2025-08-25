@@ -1,6 +1,4 @@
 # greenable-v1-core
-
-> **Greenable Lite Paper 기반 서비스의 핵심 스마트 컨트랙트 레포지토리**  
 > 본 레포는 Greenable 플랫폼에서 사용되는 미션 등록, 인증, 보상 지급, 자동 정산 등의 온체인 로직을 구현한 `core` 모듈입니다.  
 
 ---

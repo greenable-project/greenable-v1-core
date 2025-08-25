@@ -59,6 +59,8 @@ sequenceDiagram
     MissionProtocol-->>PartnerStore: emit SettlementCompleted
 ```
 
+---
+
 ## Repository Structure
 ```
 contracts/    # 스마트 컨트랙트 소스 코드
@@ -66,6 +68,8 @@ script/       # 배포 스크립트
 test/         # Foundry 기반 테스트 코드
 docs/         # Lite Paper, 다이어그램, 빌드 가이드
 ```
+
+---
 
 ## Build & Test (Foundry)
 

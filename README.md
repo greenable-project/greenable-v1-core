@@ -1,3 +1,6 @@
+<img width="1718" height="491" alt="image" src="https://github.com/user-attachments/assets/51096f33-c29a-4b2c-a5cf-8bd17eee9873" />
+
+
 # greenable-v1-core
 > 본 Repo는 Greenable 플랫폼에서 사용되는 미션 등록, 인증, 보상 지급, 자동 정산 등의 온체인 로직을 구현한 `core` 모듈입니다.  
 

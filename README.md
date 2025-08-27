@@ -31,7 +31,7 @@
 
 ---
 
-## 주요 흐름
+## Main Flow
 
 ```mermaid
 sequenceDiagram

@@ -36,6 +36,7 @@
 ```mermaid
 sequenceDiagram
     participant User
+    participant GreenableApp
     participant Company/Gov
     participant MissionProtocol
     participant Verifier
@@ -45,9 +46,10 @@ sequenceDiagram
     Company/Gov->>MissionProtocol: registerMission(mission, depositFund)
     MissionProtocol-->>Company/Gov: emit MissionRegistered
 
-    User->>Verifier: 친환경 활동 데이터 제공 (교통, 결제 등 오프체인)
-    Verifier->>User: 서명된 attestation 반환
-    User->>MissionProtocol: submitAttestation(missionId, signature)
+    User->>GreenableApp: 미션 인증
+    GreenableApp->>Verifier: 오프체인 친환경 데이터 자동 전송/검증 요청
+    Verifier->>GreenableApp: 서명된 attestation 반환
+    GreenableApp->>MissionProtocol: submitAttestation(missionId, signature)
 
     MissionProtocol->>Verifier: ECDSA 검증
     MissionProtocol->>Stablecoin: transfer(user, rewardToken)
